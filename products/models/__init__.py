@@ -1,0 +1,1 @@
+from .ProductM import Product

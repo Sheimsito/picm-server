@@ -27,9 +27,6 @@ class Product(models.Model):
     def returnCategoriesAsText(self):
       return ", ".join([category.name for category in self.category.all()])
 
-
-    ## Agregar Categoria
-
     def __str__(self):
         return self.name
     

@@ -16,6 +16,8 @@ media/
 staticfiles/
 .env
 
+settings.py
+
 # VSCode
 .vscode/
 

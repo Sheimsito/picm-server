@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: picm-django-rest
+    env: python
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "gunicorn picm_rest.wsgi:application"
+

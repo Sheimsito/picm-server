@@ -6,4 +6,3 @@ services:
     buildCommand: "chmod +x build.sh && ./build.sh"
     startCommand: "gunicorn picm_rest.wsgi:application"
     autoDeploy: true
-

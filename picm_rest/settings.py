@@ -153,6 +153,7 @@ REST_FRAMEWORK = {
 }
 
 
+
 # Email settings (read from environment for production)
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
@@ -171,6 +172,7 @@ SECURE_HSTS_PRELOAD = env_bool(os.environ.get('SECURE_HSTS_PRELOAD'), default=Fa
 SESSION_COOKIE_SECURE = env_bool(os.environ.get('SESSION_COOKIE_SECURE'), default=False)
 CSRF_COOKIE_SECURE = env_bool(os.environ.get('CSRF_COOKIE_SECURE'), default=False)
 X_FRAME_OPTIONS = os.environ.get('X_FRAME_OPTIONS', 'DENY')
+
 
 
 

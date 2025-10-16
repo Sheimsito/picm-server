@@ -11,28 +11,47 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from a .env file if it exists
+load_dotenv(os.path.join(BASE_DIR, 'prod.env'))
+
+# Small helper to parse booleans from environment
+def env_bool(value, default=False):
+    if value is None:
+        return default
+    return str(value).lower() in ("1", "true", "yes")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2c)gk58q*a4@928m19%jaqm3fq_0h7x0b2#3l@j!b&m#w)wzs-'
+# Read from environment in production. A default insecure key is kept for
+# local development only. Replace with a real secret via env var.
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-2c)gk58q*a4@928m19%jaqm3fq_0h7x0b2#3l@j!b&m#w)wzs-'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool(os.environ.get('DJANGO_DEBUG'), default=False)
 
-ALLOWED_HOSTS = []
+# Hosts
+ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h.strip()]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# CORS: allow local dev origins by default when DEBUG, otherwise read from env
+_default_local_cors = ["http://localhost:5173", "http://127.0.0.1:5173"]
+if os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS'):
+    CORS_ALLOWED_ORIGINS = [c.strip() for c in os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS').split(',') if c.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = _default_local_cors if DEBUG else []
 
-CORS_ALLOWED_CREDENTIALS = True
+CORS_ALLOWED_CREDENTIALS = env_bool(os.environ.get('DJANGO_CORS_ALLOW_CREDENTIALS'), default=True)
 
 # Application definition
 
@@ -83,12 +102,28 @@ WSGI_APPLICATION = 'picm_rest.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration
+# Defaults to SQLite for local development. In production, set DB_ENGINE and
+# related env vars (DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT).
+DB_ENGINE = os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3')
+if 'sqlite' in DB_ENGINE:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / os.environ.get('SQLITE_NAME', 'db.sqlite3'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': DB_ENGINE,
+            'NAME': os.environ.get('DB_NAME', ''),
+            'USER': os.environ.get('DB_USER', ''),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', ''),
+            'PORT': os.environ.get('DB_PORT', ''),
+        }
+    }
 
 
 # Password validation
@@ -118,14 +153,26 @@ REST_FRAMEWORK = {
 }
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Email settings (read from environment for production)
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = env_bool(os.environ.get('EMAIL_USE_TLS'), default=True)
+EMAIL_USE_SSL = env_bool(os.environ.get('EMAIL_USE_SSL'), default=False)
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
+# Security-related settings you should enable in production via env vars
+SECURE_SSL_REDIRECT = env_bool(os.environ.get('SECURE_SSL_REDIRECT'), default=False)
+SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0') or 0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool(os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS'), default=False)
+SECURE_HSTS_PRELOAD = env_bool(os.environ.get('SECURE_HSTS_PRELOAD'), default=False)
+SESSION_COOKIE_SECURE = env_bool(os.environ.get('SESSION_COOKIE_SECURE'), default=False)
+CSRF_COOKIE_SECURE = env_bool(os.environ.get('CSRF_COOKIE_SECURE'), default=False)
+X_FRAME_OPTIONS = os.environ.get('X_FRAME_OPTIONS', 'DENY')
+
 
 
 

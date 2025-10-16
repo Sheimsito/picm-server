@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 from .models.ProductM import Product
 from .models.CategoryM import Category
 
-class ProductPagination(PageNumberPagination):
+class Pagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'limit'
 
@@ -22,7 +22,7 @@ def get_product(request):
         category_name = request.query_params.get('category')
 
         if category_name:
-            products = products.filter(category__name=category_name)
+            products = products.filter(category__name__icontains=category_name)
 
         if sort_by == 'low-price':
             products = products.order_by('price')
@@ -35,7 +35,8 @@ def get_product(request):
         else:
             products = products.order_by('id')
 
-        paginator = ProductPagination()
+        
+        paginator = Pagination()
         result_page = paginator.paginate_queryset(products, request)
         data = [
             {
@@ -52,9 +53,6 @@ def get_product(request):
     except Exception as e:
         print(e)
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
 
 @api_view(['GET'])
 def get_product_by_id(request, product_id):
@@ -116,9 +114,9 @@ def create_product(request):
 
         category = Category.objects.filter(name=category_name).first()
         if category is None:
-            return Response({"error": "La categoría especificada no existe."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "La categoría especificada no existe."}, status=status.HTTP_409_CONFLICT)
         if not all([name, description, price, category]):
-            return Response({"error": "Todos los campos son obligatorios."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Todos los campos son obligatorios."}, status=status.HTTP_409_CONFLICT)
         product = Product.objects.create(
             name=name,
             description=description,
@@ -177,6 +175,97 @@ def delete_product(request, product_id):
         return Response({"message": "Producto eliminado exitosamente"}, status=status.HTTP_200_OK)
     except Product.DoesNotExist:
         return Response({"error": "Producto no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(e)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['GET'])
+def get_categories_all(request):
+    try:
+        categories = Category.objects.filter(status=True)
+        categories = categories.order_by('id')
+        paginator = Pagination()
+        result_page = paginator.paginate_queryset(categories, request)
+        data = [{"id": c.id, "name": c.name, "description": c.description} for c in result_page]
+        return paginator.get_paginated_response(data)
+    except Exception as e:
+        print(e)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_category_by_id(request, category_id):
+    try:
+        if not category_id:
+            return Response({"error": "El parámetro 'id' es obligatorio."}, status=status.HTTP_400_BAD_REQUEST)
+
+        category = Category.objects.get(id=category_id, status=True)
+        data = {
+            "id": category.id,
+            "name": category.name,
+            "description": category.description
+        }
+        return Response(data, status=status.HTTP_200_OK)
+    except Category.DoesNotExist:
+        return Response({"error": "Categoría no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(e)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def create_category(request):
+    try:
+        data = request.data
+        name = data.get('nombre')
+        description = data.get('descripcion')
+
+        if ( not name or name.strip() == "" ) or (not description or description.strip() == ""):
+            return Response({"error": "Los campos son obligatorios."}, status=status.HTTP_409_CONFLICT)
+
+        if Category.objects.filter(name=name).exists():
+            return Response({"error": "La categoría ya existe."}, status=status.HTTP_409_CONFLICT)
+
+        category = Category.objects.create(name=name, description=description)
+        return Response({"message": "Categoría creada exitosamente", "category_id": category.id}, status=status.HTTP_201_CREATED)
+    
+    except Exception as e:
+        print(e)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['PUT'])
+def update_category(request, category_id):
+    try:
+        data = request.data
+        category = Category.objects.get(id=category_id)
+
+        name = data.get('nombre')
+        description = data.get('descripcion')
+
+        if name:
+            if Category.objects.filter(name=name).exclude(id=category_id).exists():
+                return Response({"error": "Otra categoría con el mismo nombre ya existe."}, status=status.HTTP_409_CONFLICT)
+            category.name = name
+        if description:
+            category.description = description
+
+        category.save()
+        return Response({"message": "Categoría actualizada exitosamente"}, status=status.HTTP_200_OK)
+    
+    except Category.DoesNotExist:
+        return Response({"error": "Categoría no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(e)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+      
+@api_view(['DELETE'])
+def delete_category(request, category_id):
+    try:
+        category = Category.objects.get(id=category_id)
+        category.status = False
+        category.save()
+        return Response({"message": "Categoría eliminada exitosamente"}, status=status.HTTP_200_OK)
+    except Category.DoesNotExist:
+        return Response({"error": "Categoría no encontrada"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         print(e)
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

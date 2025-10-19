@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import F, Sum
 from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 
 
 # Supplier Model
@@ -37,3 +38,7 @@ class Supplier(models.Model):
         )  
     address = models.CharField(max_length=100)
     status = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Valida el modelo antes de guardarlo
+        super().save(*args, **kwargs)

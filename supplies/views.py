@@ -220,7 +220,12 @@ def get_suppliers_paginated(request):
         result_page = paginator.paginate_queryset(suppliers, request)
         data = [
             {
-                'name': supplier.name
+                'id': supplier.id,
+                'name': supplier.name,
+                'nit': supplier.nit,
+                'phone': supplier.phone,
+                'email': supplier.email,
+                'address': supplier.address
             }
             for supplier in result_page
         ]
@@ -262,11 +267,11 @@ def create_supplier(request):
     try:
         data = request.data
         Supplier.objects.create(
-                                name=data.get('nombre'),
+                                name=data.get('name'),
                                 nit= data.get('nit'),
-                                phone= data.get('telefono'),
+                                phone= data.get('phone'),
                                 email= data.get('email'),
-                                address= data.get('direccion')
+                                address= data.get('address')
                                 )
         return Response({'message': 'Proveedor creado exitosamente'},status=status.HTTP_201_CREATED
         )
@@ -281,12 +286,12 @@ def edit_supplier(request, supplier_id):
     try:
         data = request.data
         supplier = Supplier.objects.get(id=supplier_id)
-
-        supplier.name = data.get('nombre', supplier.name)
+        print(data)
+        supplier.name = data.get('name', supplier.name)
         supplier.nit = data.get('nit', supplier.nit)
-        supplier.phone = data.get('telefono', supplier.phone)
+        supplier.phone = data.get('phone', supplier.phone)
         supplier.email = data.get('email', supplier.email)
-        supplier.address = data.get('direccion', supplier.address)
+        supplier.address = data.get('address', supplier.address)
 
         supplier.save()
         return Response({'message': 'Proveedor actualizado exitosamente'}, status=status.HTTP_200_OK)

@@ -6,10 +6,10 @@ from .CategoryM import Category
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=False)
+    description = models.TextField(max_length=30,blank=False)
     price = models.DecimalField(max_digits=20, decimal_places=2)
     stock = models.IntegerField(default=0)
-    status = models.BooleanField(max_length=20, default="True")
+    status = models.BooleanField(default="True")
     category = models.ManyToManyField('Category', related_name='products', blank=True) 
     
     @classmethod

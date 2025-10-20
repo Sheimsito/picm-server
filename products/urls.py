@@ -9,6 +9,7 @@ urlpatterns = [
     path('total-stock', get_total_stock, name='total_stock'),
     path('total-stock-value', get_total_stock_value, name='total_stock_value'),
     path('update/<int:product_id>', update_product, name='update_product'),
+    path('update-stock/<int:product_id>', update_product_stock, name='update_product_stock'),
     path('delete/<int:product_id>', delete_product, name='delete_product'),
 
     # Category URLs

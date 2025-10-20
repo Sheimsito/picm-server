@@ -126,7 +126,6 @@ def update_product(request, product_id):
     try:
         data = request.data
         product = Product.objects.get(id=product_id, status='1')
-
         name = data.get('nombre')
         description = data.get('descripcion')
         price = data.get('precio')
@@ -170,6 +169,50 @@ def delete_product(request, product_id):
         print(e)
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+@api_view(['PUT'])
+def update_product_stock(request, product_id):
+    try:
+        print(request.data, request.query_params)
+        product = Product.objects.get(id=product_id, status='1')
+        data = request.data
+        increase = request.query_params.get('increase') == 'true'
+        decrease = request.query_params.get('decrease') == 'true'
+        stock = data.get('stock')
+
+        if increase and decrease:
+            return Response({"error":"No puede usar increase y decrease al tiempo"}, status=400)
+
+        if increase:
+            if int(stock) < int(product.stock):
+                return Response({"error": "El stock a aumentar debe ser mayor al actual"}, status=400)
+            product.stock = stock if stock is not None else product.stock
+            product.save()
+            return Response({"message": "Stock aumentado", "stock": product.stock}, status=200)
+
+        if decrease:
+            if int(stock) < 0 or int(stock) > int(product.stock):
+                return Response({"error": "El stock debe disminuir al valor actual y debe ser mayor que 0"}, status=400)
+            product.stock = stock if stock is not None else product.stock
+            product.save()
+            return Response({"message": "Stock disminuido", "stock": product.stock}, status=200)
+
+        # Si no viene increase/decrease, usar stock directo:
+        stock = request.data.get('stock')
+        if stock is None:
+            return Response({"error": "Debe enviar increase/decrease o 'stock' en el body"}, status=400)
+        if int(stock) < 0:
+            return Response({"error": "Stock no puede ser negativo"}, status=400)
+
+        product.stock = int(stock)
+        product.save()
+        return Response({"message": "Stock actualizado", "stock": product.stock}, status=200)
+
+    except Product.DoesNotExist:
+        return Response({"error": "Producto no encontrado"}, status=404)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
 
 @api_view(['GET'])
 def get_categories_all(request):

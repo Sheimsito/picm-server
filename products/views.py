@@ -24,18 +24,9 @@ def get_product(request):
         if category_name:
             products = products.filter(category__name__icontains=category_name)
 
-        if sort_by == 'low-price':
-            products = products.order_by('price')
-        elif sort_by == 'high-price':
-            products = products.order_by('-price')
-        elif sort_by == 'low-stock':
-            products = products.order_by('stock')
-        elif sort_by == 'high-stock':
-            products = products.order_by('-stock')
-        else:
-            products = products.order_by('id')
+        if sort_by  in ['price','-price', 'stock', '-stock']:
+            products = products.order_by(sort_by)
 
-        
         paginator = Pagination()
         result_page = paginator.paginate_queryset(products, request)
         data = [

@@ -15,10 +15,8 @@ from django.utils.encoding import force_bytes, force_str
 def user_login(request):
     username = request.data.get('username')
     password = request.data.get('password')
-
     try:
         user = authenticate(request, username=username, password=password)
-
         if user is not None:
             login(request, user)
             return Response({"message": "Inicio de sesión exitoso"}, status=status.HTTP_200_OK)
@@ -82,5 +80,14 @@ def confirm_password_reset(request):
         return Response({"message": "Contraseña restablecida exitosamente."}, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_users_name(request):
+    try:
+        users = User.objects.all()
+        users_data = [{"username": user.username} for user in users]
+        return Response(users_data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

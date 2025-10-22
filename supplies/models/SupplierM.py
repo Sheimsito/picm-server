@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 
 # Supplier Model
 class Supplier(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=30)
     nit = models.CharField(
         max_length=12,
         unique=True,

@@ -4,8 +4,10 @@ from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from .models.SupplierM import Supplier
 from .models.SuppliesM import Supplies
+from movements.models import SupplyMovement
 
 class StandardResultsSetPagination(PageNumberPagination):
+
     page_size = 10
     page_size_query_param = 'page_size'
 
@@ -78,6 +80,17 @@ def get_supply(request, supply_id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@api_view(['GET'])
+def get_supplies_name(request):
+    try:
+        supply = Supplies.objects.filter(status=1)
+        data = [s.name for s in supply]
+        return Response(data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 @api_view(['POST'])
 def create_supply(request):
     try:
@@ -139,6 +152,64 @@ def edit_supply(request, supply_id):
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR    
         )
+
+@api_view(['PUT'])
+def update_supply_stock(request, supply_id):
+    try:
+        supply = Supplies.objects.get(id=supply_id, status='1')
+        data = request.data
+        increase = request.query_params.get('increase') == 'true'
+        decrease = request.query_params.get('decrease') == 'true'
+        stock = data.get('stock')
+
+        if increase and decrease:
+            return Response({"error":"No puede usar increase y decrease al tiempo"}, status=400)
+
+        if increase:
+            if int(stock) < int(supply.stock):
+                return Response({"error": "El stock a aumentar debe ser mayor al actual"}, status=400)
+            supply.stock = stock if stock is not None else supply.stock
+            supply.save()
+            SupplyMovement.objects.create(
+                user=request.user,
+                user_name=request.user.username,
+                supply=supply,
+                supply_name=supply.name,
+                modificationType='Incremento',
+                modifiedStock=supply.stock
+            )
+            return Response({"message": "Stock aumentado", "stock": supply.stock}, status=200)
+
+        if decrease:
+            if int(stock) < 0 or int(stock) > int(supply.stock):
+                return Response({"error": "El stock debe disminuir al valor actual y debe ser mayor que 0"}, status=400)
+            supply.stock = stock if stock is not None else supply.stock
+            supply.save()
+            SupplyMovement.objects.create(
+                user=request.user,
+                user_name=request.user.username,
+                supply=supply,
+                supply_name=supply.name,
+                modificationType='Disminución',
+                modifiedStock=supply.stock
+            )
+            return Response({"message": "Stock disminuido", "stock": supply.stock}, status=200)
+
+        # Si no viene increase/decrease, usar stock directo:
+        stock = request.data.get('stock')
+        if stock is None:
+            return Response({"error": "Debe enviar increase/decrease o 'stock' en el body"}, status=400)
+        if int(stock) < 0:
+            return Response({"error": "Stock no puede ser negativo"}, status=400)
+
+        supply.stock = int(stock)
+        supply.save()
+        return Response({"message": "Stock actualizado", "stock": supply.stock}, status=200)
+
+    except Supplies.DoesNotExist:
+        return Response({"error": "Insumo no encontrado"}, status=404)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
     
 @api_view(['DELETE'])
 def delete_supply(request, supply_id):

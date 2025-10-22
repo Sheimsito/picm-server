@@ -12,4 +12,5 @@ urlpatterns = [
     path('password-reset', password_reset, name='password_reset'),
     path('confirm-reset-password', confirm_password_reset, name='reset_password'),
     path('get-users-name', get_users_name, name='get_users_name'),
+    path('user', get_user_name_jwt, name='get_user_name'),
 ]

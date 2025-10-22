@@ -175,7 +175,7 @@ def update_supply_stock(request, supply_id):
                 user_name=request.user.username,
                 supply=supply,
                 supply_name=supply.name,
-                modificationType='Incremento',
+                modificationType='Entrada',
                 modifiedStock=supply.stock
             )
             return Response({"message": "Stock aumentado", "stock": supply.stock}, status=200)
@@ -190,7 +190,7 @@ def update_supply_stock(request, supply_id):
                 user_name=request.user.username,
                 supply=supply,
                 supply_name=supply.name,
-                modificationType='Disminución',
+                modificationType='Salida',
                 modifiedStock=supply.stock
             )
             return Response({"message": "Stock disminuido", "stock": supply.stock}, status=200)

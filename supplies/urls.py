@@ -4,6 +4,7 @@ from .views import *
 urlpatterns = [
     #  Supplies URLs
     path('get-paginated', get_supplies, name='get_supplies'),
+    path('get-supplies-name', get_supplies_name, name='get_supplies_name'), 
     path('create', create_supply, name='create_supply'),
     path('total-stock', get_supply_total_stock, name='get_supply_total_stock'),
     path('total-inventory-value', get_supply_total_inventory_value, name='get_supply_total_inventory_value'),

@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from .models.ProductM import Product
 from .models.CategoryM import Category
+from movements.models import ProductMovement
+
 
 class Pagination(PageNumberPagination):
     page_size = 10
@@ -63,6 +65,18 @@ def get_product_by_id(request, product_id):
     except Exception as e:
         print(e)
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_products_name(request):
+    try:
+        products = Product.objects.filter(status='1')
+        data = [p.name for p in products]
+        return Response(data, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(e)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    
 
 @api_view(['GET'])
 def get_total_stock(request):
@@ -187,6 +201,14 @@ def update_product_stock(request, product_id):
                 return Response({"error": "El stock a aumentar debe ser mayor al actual"}, status=400)
             product.stock = stock if stock is not None else product.stock
             product.save()
+            ProductMovement.objects.create(
+                user=request.user,
+                user_name=request.user.username,
+                product=product,
+                product_name=product.name,
+                modificationType='Incremento',
+                modifiedStock=product.stock
+            )
             return Response({"message": "Stock aumentado", "stock": product.stock}, status=200)
 
         if decrease:
@@ -194,6 +216,14 @@ def update_product_stock(request, product_id):
                 return Response({"error": "El stock debe disminuir al valor actual y debe ser mayor que 0"}, status=400)
             product.stock = stock if stock is not None else product.stock
             product.save()
+            ProductMovement.objects.create(
+                user=request.user,
+                user_name=request.user.username,
+                product=product,
+                product_name=product.name,
+                modificationType='Disminución',
+                modifiedStock=product.stock
+            )
             return Response({"message": "Stock disminuido", "stock": product.stock}, status=200)
 
         # Si no viene increase/decrease, usar stock directo:

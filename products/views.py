@@ -206,7 +206,7 @@ def update_product_stock(request, product_id):
                 user_name=request.user.username,
                 product=product,
                 product_name=product.name,
-                modificationType='Incremento',
+                modificationType='Entrada',
                 modifiedStock=product.stock
             )
             return Response({"message": "Stock aumentado", "stock": product.stock}, status=200)
@@ -221,7 +221,7 @@ def update_product_stock(request, product_id):
                 user_name=request.user.username,
                 product=product,
                 product_name=product.name,
-                modificationType='Disminución',
+                modificationType='Salida',
                 modifiedStock=product.stock
             )
             return Response({"message": "Stock disminuido", "stock": product.stock}, status=200)

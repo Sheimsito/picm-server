@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -67,7 +68,8 @@ INSTALLED_APPS = [
     'products',
     'users',
     'supplies',
-    'movements'
+    'movements',
+    'stats'
 ]
 
 MIDDLEWARE = [
@@ -97,6 +99,11 @@ TEMPLATES = [
         },
     },
 ]
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
 
 WSGI_APPLICATION = 'picm_rest.wsgi.application'
 
@@ -154,6 +161,30 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ]
 }
+
+# Cache configuration
+# Use Redis if available, otherwise fall back to local memory cache
+if os.environ.get('REDIS_URL'):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'picm_stats',
+            'TIMEOUT': 10, 
+        }
+    }
+else:
+    # Fallback to local memory cache for development
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'picm-stats-cache',
+            'TIMEOUT': 10,  
+        }
+    }
 
 
 

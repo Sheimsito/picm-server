@@ -91,3 +91,14 @@ def get_users_name(request):
         return Response(users_data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['GET'])
+def get_user_name_jwt(request):
+    try:
+        if request.user.is_authenticated:
+            username = request.user.username
+            return Response({"username": username}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Usuario no autenticado."}, status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

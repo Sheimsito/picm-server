@@ -3,6 +3,7 @@ services:
     name: picm-django-rest
     env: python
     plan: free
+    pythonVersion: 3.12
     buildCommand: "chmod +x build.sh && ./build.sh"
     startCommand: "gunicorn picm_rest.wsgi:application"
     autoDeploy: true

@@ -105,8 +105,6 @@ class TopProductsSalesView(StatisticsBaseView):
                 'period': period,
                 'total_products': len(data)
             }
-
-            cache.set(cache_key, response_data, 30)
             
             return Response(response_data)
             
@@ -166,8 +164,6 @@ class TopProductsEntriesView(StatisticsBaseView):
                 'total_products': len(data)
             }
             
-            cache.set(cache_key, response_data, 30)
-            
             return Response(response_data)
             
         except ValidationError as e:
@@ -213,8 +209,6 @@ class ProductMovementsVolumeView(StatisticsBaseView):
                 'period': period,
                 'total_movements': total_movements
             }
-            
-            cache.set(cache_key, response_data, 30)
             
             return Response(response_data)
             
@@ -308,7 +302,6 @@ class MonthlyMovementsView(StatisticsBaseView):
                 'total_sales': total_sales
             }
             
-            cache.set(cache_key, response_data, 100)
             return Response(response_data)
             
         except (ValueError, TypeError) as e:
@@ -367,7 +360,6 @@ class TopSuppliesSalesView(StatisticsBaseView):
                 'total_supplies': len(data)
             }
             
-            cache.set(cache_key, response_data, 30)
             
             return Response(response_data)
             

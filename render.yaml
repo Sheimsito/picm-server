@@ -1,6 +1,7 @@
 services:
   - type: web
     name: picm-django-rest
+    runtime: python          # ← ESTA LÍNEA FALTABA
     env: python
     plan: free
     pythonVersion: 3.12

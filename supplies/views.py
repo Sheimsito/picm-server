@@ -5,6 +5,8 @@ from rest_framework.pagination import PageNumberPagination
 from .models.SupplierM import Supplier
 from .models.SuppliesM import Supplies
 from movements.models import SupplyMovement
+from core.audit_mixin import AuditlogUserMixin
+from auditlog.context import set_actor
 
 class StandardResultsSetPagination(PageNumberPagination):
 
@@ -100,11 +102,13 @@ def create_supply(request):
         unitaryPrice = data.get('precio_unitario')
         supplier_name = data.get('proveedor')
         supplier = Supplier.objects.filter(name=supplier_name).first()
-        new_supply = Supplies.objects.create(
-            name=name,
-            description=description,
-            unitaryPrice=unitaryPrice,
-            supplier=supplier
+
+        with set_actor(request.user):
+            new_supply = Supplies.objects.create(
+                name=name,
+                description=description,
+                unitaryPrice=unitaryPrice,
+                supplier=supplier
         )
         return Response({'message': 'El insumo creado exitosamente'},status=status.HTTP_201_CREATED
         )
@@ -135,7 +139,8 @@ def edit_supply(request, supply_id):
             supplier = Supplier.objects.get(name=supplier_name)
             supply.supplier = supplier
 
-        supply.save()
+        with set_actor(request.user):
+            supply.save()
         return Response({'message': 'Insumo actualizado exitosamente'}, status=status.HTTP_200_OK)
     except Supplies.DoesNotExist:
         return Response(
@@ -169,7 +174,8 @@ def update_supply_stock(request, supply_id):
             if(int(stock) < 0):
                 return Response({"error": "El stock a aumentar debe ser mayor que 0"}, status=400)
             supply.stock += int(stock)
-            supply.save()
+            with set_actor(request.user):
+                supply.save()
             SupplyMovement.objects.create(
                 user=request.user,
                 user_name=request.user.username,
@@ -184,7 +190,8 @@ def update_supply_stock(request, supply_id):
             if(int(stock) < 0):
                 return Response({"error": "El stock a disminuir debe ser mayor que 0"}, status=400)
             supply.stock -= int(stock)
-            supply.save()
+            with set_actor(request.user):
+                supply.save()
             SupplyMovement.objects.create(
                 user=request.user,
                 user_name=request.user.username,
@@ -203,7 +210,8 @@ def update_supply_stock(request, supply_id):
             return Response({"error": "Stock no puede ser negativo"}, status=400)
 
         supply.stock = int(stock)
-        supply.save()
+        with set_actor(request.user):
+            supply.save()
         return Response({"message": "Stock actualizado", "stock": supply.stock}, status=200)
 
     except Supplies.DoesNotExist:
@@ -214,9 +222,10 @@ def update_supply_stock(request, supply_id):
 @api_view(['DELETE'])
 def delete_supply(request, supply_id):
     try:
-        supply = Supplies.objects.get(id=supply_id)
+        supply = Supplies.objects.get(id=supply_id, status="1")
         supply.status = False
-        supply.save()
+        with set_actor(request.user):
+            supply.save()
         return Response({'message': 'Insumo eliminado exitosamente'}, status=status.HTTP_200_OK)
     except Supplies.DoesNotExist:
         return Response(
@@ -262,7 +271,7 @@ def get_supply_total_inventory_value(request):
 @api_view(['GET'])
 def get_suppliers(request):
     try:
-        suppliers = Supplier.objects.all()
+        suppliers = Supplier.objects.filter(status="1")
         data = [
             {
                 'name': supplier.name
@@ -282,10 +291,10 @@ def get_suppliers_paginated(request):
         if 'search' in request.query_params:
             search_term = request.GET['search']
             suppliers = Supplier.objects.filter(
-                name__icontains=search_term
+                name__icontains=search_term, status="1"
             )
         else:
-            suppliers = Supplier.objects.all()
+            suppliers = Supplier.objects.filter(status="1")
         
         paginator = StandardResultsSetPagination()
         result_page = paginator.paginate_queryset(suppliers, request)
@@ -312,7 +321,7 @@ def get_suppliers_paginated(request):
 @api_view(['GET'])
 def get_supplier_by_id(request, supplier_id):
     try:
-        supplier = Supplier.objects.get(id=supplier_id)
+        supplier = Supplier.objects.get(id=supplier_id, status="1")
         data = {
             'id': supplier.id,
             'name': supplier.name,
@@ -337,7 +346,8 @@ def get_supplier_by_id(request, supplier_id):
 def create_supplier(request):
     try:
         data = request.data
-        Supplier.objects.create(
+        with set_actor(request.user):
+            Supplier.objects.create(
                                 name=data.get('name'),
                                 nit= data.get('nit'),
                                 phone= data.get('phone'),
@@ -356,7 +366,7 @@ def create_supplier(request):
 def edit_supplier(request, supplier_id):
     try:
         data = request.data
-        supplier = Supplier.objects.get(id=supplier_id)
+        supplier = Supplier.objects.get(id=supplier_id, status="1")
         print(data)
         supplier.name = data.get('name', supplier.name)
         supplier.nit = data.get('nit', supplier.nit)
@@ -364,7 +374,8 @@ def edit_supplier(request, supplier_id):
         supplier.email = data.get('email', supplier.email)
         supplier.address = data.get('address', supplier.address)
 
-        supplier.save()
+        with set_actor(request.user):
+            supplier.save()
         return Response({'message': 'Proveedor actualizado exitosamente'}, status=status.HTTP_200_OK)
     except Supplier.DoesNotExist:
         return Response(
@@ -380,8 +391,10 @@ def edit_supplier(request, supplier_id):
 @api_view(['DELETE'])
 def delete_supplier(request, supplier_id):
     try:
-        supplier = Supplier.objects.get(id=supplier_id)
-        supplier.delete()
+        supplier = Supplier.objects.get(id=supplier_id, status="1")
+        supplier.status = False
+        with set_actor(request.user):
+            supplier.save()
         return Response({'message': 'Proveedor eliminado exitosamente'}, status=status.HTTP_200_OK)
     except Supplier.DoesNotExist:
         return Response(

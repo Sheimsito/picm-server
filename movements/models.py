@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
+from auditlog.models import AuditlogHistoryField
+from auditlog.registry import auditlog
 
 class Movement(models.Model):
     modifiedStock = models.IntegerField(validators=[MinValueValidator(0)]            
@@ -10,13 +12,15 @@ class Movement(models.Model):
     dateHourUpdate = models.DateTimeField(auto_now=True)
     dateHourDeletion = models.DateTimeField(null=True, blank=True)
     comentary = models.CharField(max_length=40, null=True, blank=True)
-
+    history = AuditlogHistoryField()
+    
     class Meta:
         abstract = True
 
     def save(self, *args, **kwargs):
         self.full_clean() 
         super().save(*args, **kwargs)
+
 
 
 class SupplyMovement(Movement):
@@ -39,7 +43,11 @@ class SupplyMovement(Movement):
     status = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Movement {self.id} - Supply: {self.supply.name} - Type: {self.modificationType} - Modified Stock: {self.modifiedStock}"
+        return f"Movimiento Insumo {self.id} - {self.supply_name} - {self.modificationType}"
+
+history = AuditlogHistoryField()
+auditlog.register(SupplyMovement)
+
     
 
 class ProductMovement(Movement):
@@ -62,4 +70,7 @@ class ProductMovement(Movement):
     status = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Movement {self.id} - Product: {self.product.name} - Type: {self.modificationType} - Modified Stock: {self.modifiedStock}"
+        return f"Movimiento Producto {self.id} - {self.product_name} - {self.modificationType}"
+
+history = AuditlogHistoryField()
+auditlog.register(ProductMovement)

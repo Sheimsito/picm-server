@@ -197,9 +197,9 @@ def update_product_stock(request, product_id):
             return Response({"error":"No puede usar increase y decrease al tiempo"}, status=400)
 
         if increase:
-            if int(stock) < int(product.stock):
-                return Response({"error": "El stock a aumentar debe ser mayor al actual"}, status=400)
-            product.stock = stock if stock is not None else product.stock
+            if(int(stock) < 0):
+                return Response({"error": "El stock a aumentar debe ser mayor que 0"}, status=400)
+            product.stock += int(stock)
             product.save()
             ProductMovement.objects.create(
                 user=request.user,
@@ -207,14 +207,14 @@ def update_product_stock(request, product_id):
                 product=product,
                 product_name=product.name,
                 modificationType='Entrada',
-                modifiedStock=product.stock
+                modifiedStock=int(stock)
             )
             return Response({"message": "Stock aumentado", "stock": product.stock}, status=200)
 
         if decrease:
-            if int(stock) < 0 or int(stock) > int(product.stock):
-                return Response({"error": "El stock debe disminuir al valor actual y debe ser mayor que 0"}, status=400)
-            product.stock = stock if stock is not None else product.stock
+            if(int(stock) < 0):
+                return Response({"error": "El stock a disminuir debe ser mayor que 0"}, status=400)
+            product.stock -= int(stock)
             product.save()
             ProductMovement.objects.create(
                 user=request.user,
@@ -222,7 +222,7 @@ def update_product_stock(request, product_id):
                 product=product,
                 product_name=product.name,
                 modificationType='Salida',
-                modifiedStock=product.stock
+                modifiedStock=int(stock)
             )
             return Response({"message": "Stock disminuido", "stock": product.stock}, status=200)
 

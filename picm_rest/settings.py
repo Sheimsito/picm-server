@@ -69,7 +69,8 @@ INSTALLED_APPS = [
     'users',
     'supplies',
     'movements',
-    'stats'
+    'stats',
+    'reports'
 ]
 
 MIDDLEWARE = [

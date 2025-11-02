@@ -50,8 +50,8 @@ def list_movements(request):
             "modificationType": m.modificationType,
             "modifiedStock": m.modifiedStock,
             "comentary": m.comentary,
-            "dateHourCreation": m.dateHourCreation,
-            "dateHourUpdate": m.dateHourUpdate,
+            "dateHourCreation": m.dateHourCreation.strftime('%Y/%m/%d') if m.dateHourCreation else '',
+            "dateHourUpdate": m.dateHourUpdate.strftime('%Y/%m/%d') if m.dateHourUpdate else '',
         })
     print(data)
     return paginator.get_paginated_response(data)
@@ -77,7 +77,7 @@ def get_movement_by_id(request, movement_id,tipo_movimiento):
         "modificationType": movement.modificationType,
         "modifiedStock": movement.modifiedStock,
         "comentary": movement.comentary,
-        "dateHourCreation": movement.dateHourCreation
+        "dateHourCreation": movement.dateHourCreation.strftime('%Y/%m/%d') if movement.dateHourCreation else ''
     }
 
     if tipo == "productos":
@@ -172,6 +172,7 @@ def update_movement(request, movement_id, tipo_movimiento):
         if not product:
             return Response({"error": "Producto no encontrado."}, status=status.HTTP_404_NOT_FOUND)
         else:
+            movement.product_name = product.name
             movement.product = product
 
     if tipo == "insumos" and "supply_name" in data:
@@ -179,6 +180,7 @@ def update_movement(request, movement_id, tipo_movimiento):
         if not supply:
             return Response({"error": "Insumo no encontrado."}, status=status.HTTP_404_NOT_FOUND)
         else:
+            movement.supply_name = supply.name
             movement.supply = supply
 
 

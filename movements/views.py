@@ -11,6 +11,8 @@ from products.models import Product
 from supplies.models import Supplies
 from django.contrib.auth.models import User
 from django.utils import timezone
+from core.audit_mixin import AuditlogUserMixin
+from auditlog.context import set_actor
 
 class MovementsPagination(PageNumberPagination):
     page_size = 10
@@ -121,14 +123,14 @@ def create_movement(request, tipo_movimiento):
             return Response({"error": "Insumo no encontrado"}, status=404)
         target_fk_field = {"supply": supply, "supply_name": supply.name}
 
-
-    Model.objects.create(
-        user=user,
-        user_name=user.username,
-        modificationType=modification_type,
-        modifiedStock=modified_stock,
-        comentary=data.get("comentary", ""),
-        **target_fk_field
+    with set_actor(user):
+        Model.objects.create(
+            user=user,
+            user_name=user.username,
+            modificationType=modification_type,
+            modifiedStock=modified_stock,
+            comentary=data.get("comentary", ""),
+            **target_fk_field
     )
 
     return Response(
@@ -183,10 +185,10 @@ def update_movement(request, movement_id, tipo_movimiento):
             movement.supply_name = supply.name
             movement.supply = supply
 
-
-    if date_hour_creation := data.get("dateHourCreation"):
-        movement.dateHourCreation = date_hour_creation
-    movement.save()
+    with set_actor(request.user):
+        if date_hour_creation := data.get("dateHourCreation"):
+            movement.dateHourCreation = date_hour_creation
+        movement.save()
 
     return Response(
         {"message": "El movimiento se editó exitosamente."},
@@ -210,7 +212,8 @@ def delete_movement(request, movement_id, tipo_movimiento):
     movement.status = False
     movement.dateHourDeletion = timezone.now()
 
-    movement.save()
+    with set_actor(request.user):
+        movement.save()
 
     return Response(
         {"message": "El movimiento se eliminó exitosamente."},

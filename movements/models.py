@@ -22,6 +22,7 @@ class Movement(models.Model):
         super().save(*args, **kwargs)
 
 
+
 class SupplyMovement(Movement):
 
     user = models.ForeignKey(
@@ -42,7 +43,11 @@ class SupplyMovement(Movement):
     status = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Movement {self.id} - Supply: {self.supply.name} - Type: {self.modificationType} - Modified Stock: {self.modifiedStock}"
+        return f"Movimiento Insumo {self.id} - {self.supply_name} - {self.modificationType}"
+
+history = AuditlogHistoryField()
+auditlog.register(SupplyMovement)
+
     
 
 class ProductMovement(Movement):
@@ -65,4 +70,7 @@ class ProductMovement(Movement):
     status = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Movement {self.id} - Product: {self.product.name} - Type: {self.modificationType} - Modified Stock: {self.modifiedStock}"
+        return f"Movimiento Producto {self.id} - {self.product_name} - {self.modificationType}"
+
+history = AuditlogHistoryField()
+auditlog.register(ProductMovement)

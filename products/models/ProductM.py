@@ -2,6 +2,8 @@ from django.db import models
 from django.db.models import F, Sum
 from .CategoryM import Category
 from django.core.validators import RegexValidator
+from auditlog.models import AuditlogHistoryField
+from auditlog.registry import auditlog
 
 # Product Model
 
@@ -51,4 +53,6 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()  # Valida el modelo antes de guardarlo
         super().save(*args, **kwargs)
-  
+    
+history = AuditlogHistoryField()
+auditlog.register(Product)

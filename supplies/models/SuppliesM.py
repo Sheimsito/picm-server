@@ -2,6 +2,8 @@ from django.db import models
 from django.db.models import F, Sum
 from supplies.models.SupplierM import Supplier
 from django.core.validators import RegexValidator
+from auditlog.models import AuditlogHistoryField
+from auditlog.registry import auditlog
 
 class Supplies(models.Model):
     name = models.CharField(max_length=30)
@@ -47,3 +49,6 @@ class Supplies(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()  # Valida el modelo antes de guardarlo
         super().save(*args, **kwargs)
+
+history = AuditlogHistoryField()
+auditlog.register(Supplies)

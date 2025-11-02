@@ -40,7 +40,7 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env_bool(os.environ.get('DJANGO_DEBUG'), default=False)
+DEBUG = env_bool(os.environ.get('DJANGO_DEBUG'), default=True)
 
 # Hosts
 ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h.strip()]
@@ -65,6 +65,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'auditlog',
+    'core',
     'products',
     'users',
     'supplies',

@@ -1,5 +1,6 @@
 from django.db import models
-
+from auditlog.models import AuditlogHistoryField
+from auditlog.registry import auditlog
 
 # Category Model
 
@@ -10,3 +11,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+history = AuditlogHistoryField()
+auditlog.register(Category)

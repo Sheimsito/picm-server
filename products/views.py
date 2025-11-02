@@ -5,6 +5,8 @@ from rest_framework.pagination import PageNumberPagination
 from .models.ProductM import Product
 from .models.CategoryM import Category
 from movements.models import ProductMovement
+from core.audit_mixin import AuditlogUserMixin
+from auditlog.context import set_actor
 
 
 class Pagination(PageNumberPagination):
@@ -122,13 +124,15 @@ def create_product(request):
             return Response({"error": "La categoría especificada no existe."}, status=status.HTTP_409_CONFLICT)
         if not all([name, description, price, category]):
             return Response({"error": "Todos los campos son obligatorios."}, status=status.HTTP_409_CONFLICT)
-        product = Product.objects.create(
-            name=name,
-            description=description,
-            price=price,
-            status=True
-        )
-        product.category.set([category])
+        
+        with set_actor(request.user):
+            product = Product.objects.create(
+                name=name,
+                description=description,
+                price=price,
+                status=True
+            )
+            product.category.set([category])
         return Response({"message": "Producto creado exitosamente", "product_id": product.id}, status=status.HTTP_201_CREATED)
     
     except Exception as e:
@@ -161,7 +165,8 @@ def update_product(request, product_id):
         if stock is not None:
             product.stock = stock
 
-        product.save()
+        with set_actor(request.user):
+            product.save()
         return Response({"message": "Producto actualizado exitosamente"}, status=status.HTTP_200_OK)
     
     except Product.DoesNotExist:
@@ -175,7 +180,8 @@ def delete_product(request, product_id):
     try:
         product = Product.objects.get(id=product_id, status='1')
         product.status = False
-        product.save()
+        with set_actor(request.user):
+            product.save()
         return Response({"message": "Producto eliminado exitosamente"}, status=status.HTTP_200_OK)
     except Product.DoesNotExist:
         return Response({"error": "Producto no encontrado"}, status=status.HTTP_404_NOT_FOUND)
@@ -200,7 +206,8 @@ def update_product_stock(request, product_id):
             if int(stock) < int(product.stock):
                 return Response({"error": "El stock a aumentar debe ser mayor al actual"}, status=400)
             product.stock = stock if stock is not None else product.stock
-            product.save()
+            with set_actor(request.user):
+                product.save()
             ProductMovement.objects.create(
                 user=request.user,
                 user_name=request.user.username,
@@ -215,7 +222,8 @@ def update_product_stock(request, product_id):
             if int(stock) < 0 or int(stock) > int(product.stock):
                 return Response({"error": "El stock debe disminuir al valor actual y debe ser mayor que 0"}, status=400)
             product.stock = stock if stock is not None else product.stock
-            product.save()
+            with set_actor(request.user):
+                product.save()
             ProductMovement.objects.create(
                 user=request.user,
                 user_name=request.user.username,
@@ -234,7 +242,8 @@ def update_product_stock(request, product_id):
             return Response({"error": "Stock no puede ser negativo"}, status=400)
 
         product.stock = int(stock)
-        product.save()
+        with set_actor(request.user):
+            product.save()
         return Response({"message": "Stock actualizado", "stock": product.stock}, status=200)
 
     except Product.DoesNotExist:
@@ -289,7 +298,8 @@ def create_category(request):
         if Category.objects.filter(name=name).exists():
             return Response({"error": "La categoría ya existe."}, status=status.HTTP_409_CONFLICT)
 
-        category = Category.objects.create(name=name, description=description)
+        with set_actor(request.user):
+            category = Category.objects.create(name=name, description=description)
         return Response({"message": "Categoría creada exitosamente", "category_id": category.id}, status=status.HTTP_201_CREATED)
     
     except Exception as e:
@@ -312,7 +322,8 @@ def update_category(request, category_id):
         if description:
             category.description = description
 
-        category.save()
+        with set_actor(request.user):
+            category.save()
         return Response({"message": "Categoría actualizada exitosamente"}, status=status.HTTP_200_OK)
     
     except Category.DoesNotExist:
@@ -326,7 +337,8 @@ def delete_category(request, category_id):
     try:
         category = Category.objects.get(id=category_id)
         category.status = False
-        category.save()
+        with set_actor(request.user):
+            category.save()
         return Response({"message": "Categoría eliminada exitosamente"}, status=status.HTTP_200_OK)
     except Category.DoesNotExist:
         return Response({"error": "Categoría no encontrada"}, status=status.HTTP_404_NOT_FOUND)

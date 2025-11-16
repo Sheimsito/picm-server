@@ -12,4 +12,5 @@ urlpatterns = [
     path('api/movements/', include('movements.urls')),
     path('api/statistics/', include('stats.urls')),
     path('api/reports/', include('reports.urls')),
+    path('api/chatbot/', include('chatbot.urls')),
 ]

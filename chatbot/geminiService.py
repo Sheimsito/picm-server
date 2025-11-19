@@ -17,8 +17,7 @@ Tu tarea:
 - Responder cualquier pregunta del usuario basada SOLO en el manual.
 - Guiar con pasos claros.
 - Ser amable, preciso y corto.
-- Si algo no está en el manual, di: “Esa funcionalidad no está documentada en PICM”.
-
+- Si algo no está en el manual, di: “Esa funcionalidad no está documentada en PICM” y recomienda contactar mediante el correo de la organización que es soporte@picm.com.
 """
 
 
